@@ -3,91 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xác nhận đơn hàng - BookStore</title>
+    <title>Thanh toán đơn hàng - BookStore</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .card { background: white; width: 90%; max-width: 400px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); padding: 25px; text-align: center; }
-        .header { color: #0068ff; font-size: 28px; font-weight: bold; margin-bottom: 10px; }
-        .status-badge { background: #fff3cd; color: #856404; padding: 5px 15px; border-radius: 20px; font-size: 14px; display: inline-block; margin-bottom: 20px; }
-        .order-info { text-align: left; background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 25px; border: 1px solid #eee; }
-        .order-info p { margin: 8px 0; color: #555; }
-        .total-price { font-size: 26px; color: #d9534f; font-weight: bold; margin-top: 10px; display: block; }
-        .btn-confirm { background: #0068ff; color: white; border: none; padding: 18px 20px; width: 100%; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn-confirm:disabled { background: #ccc; cursor: not-allowed; }
-        #success-msg { display: none; margin-top: 20px; }
-        .check-icon { font-size: 50px; color: #28a745; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f7f9; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .invoice-box { background: white; width: 100%; max-width: 450px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); padding: 25px; }
+        .header { text-align: center; border-bottom: 2px dashed #eee; padding-bottom: 20px; margin-bottom: 20px; }
+        .header h1 { color: #0068ff; margin: 0; font-size: 24px; }
+        .info-row { display: flex; justify-content: space-between; margin-bottom: 10px; color: #666; font-size: 14px; }
+        
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th { text-align: left; color: #999; font-size: 12px; text-transform: uppercase; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+        td { padding: 12px 0; font-size: 15px; border-bottom: 1px solid #f9f9f9; }
+        .qty { color: #888; font-size: 13px; }
+        
+        .summary { margin-top: 20px; border-top: 2px solid #f4f7f9; padding-top: 15px; }
+        .total-row { display: flex; justify-content: space-between; font-size: 20px; font-weight: bold; color: #d9534f; }
+        
+        .btn-confirm { background: #0068ff; color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 25px; box-shadow: 0 4px 12px rgba(0,104,255,0.3); }
+        .btn-confirm:active { transform: scale(0.98); }
+        #success-msg { display: none; text-align: center; padding: 30px 0; }
+        .check-icon { font-size: 60px; color: #28a745; margin-bottom: 15px; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <div class="header">BOOK STORE</div>
-        <div id="status-tag" class="status-badge">Chờ xác nhận thanh toán</div>
-        
-        <div id="order-details" class="order-info">
-            <p>Mã hóa đơn: <strong id="display-id">---</strong></p>
-            <p>Nội dung: <strong>Thanh toán mua sách</strong></p>
-            <hr style="border: 0.5px solid #eee;">
-            <p>Tổng tiền cần trả:</p>
-            <span class="total-price" id="display-total">0đ</span>
+    <div class="invoice-box" id="invoice-content">
+        <div class="header">
+            <h1>BOOK STORE</h1>
+            <p style="margin: 5px 0; font-size: 13px; color: #999;">Hóa đơn thanh toán điện tử</p>
+        </div>
+
+        <div class="info-row">
+            <span>Mã hóa đơn:</span>
+            <strong id="display-id" style="color: #333;">---</strong>
+        </div>
+        <div class="info-row">
+            <span>Ngày tạo:</span>
+            <span id="display-date">---</span>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Sản phẩm</th>
+                    <th style="text-align: right;">Thành tiền</th>
+                </tr>
+            </thead>
+            <tbody id="product-list">
+                </tbody>
+        </table>
+
+        <div class="summary">
+            <div class="total-row">
+                <span>TỔNG CỘNG:</span>
+                <span id="display-total">0đ</span>
+            </div>
         </div>
 
         <button id="btnConfirm" class="btn-confirm">XÁC NHẬN THANH TOÁN</button>
+    </div>
 
-        <div id="success-msg">
-            <div class="check-icon">✔</div>
-            <h3 style="color: #28a745;">Thành công!</h3>
-            <p>Cảm ơn ông đã mua hàng. Hệ thống tại quầy đang xử lý...</p>
-        </div>
+    <div class="invoice-box" id="success-msg">
+        <div class="check-icon">✔</div>
+        <h2 style="color: #28a745; margin: 0;">THÀNH CÔNG!</h2>
+        <p style="color: #666;">Cảm ơn ông đã mua sắm tại BookStore.<br>Vui lòng kiểm tra lại App tại quầy.</p>
     </div>
 
     <script type="module">
-        // Import các hàm cần thiết từ Firebase SDK
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
         import { getDatabase, ref, update } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js";
 
-        // Cấu hình Database của ông
-        const firebaseConfig = {
-            databaseURL: "https://nhanqrcode-default-rtdb.asia-southeast1.firebasedatabase.app/"
-        };
-
-        // Khởi tạo Firebase
+        const firebaseConfig = { databaseURL: "https://nhanqrcode-default-rtdb.asia-southeast1.firebasedatabase.app/" };
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Lấy thông tin từ mã QR (URL)
+        // LẤY DỮ LIỆU TỪ URL
         const urlParams = new URLSearchParams(window.location.search);
-        const id = urlParams.get('id') || 'TEMP_ID';
+        const id = urlParams.get('id') || 'TEMP';
         const total = urlParams.get('total') || '0';
+        const itemsRaw = urlParams.get('items') || ''; // Chuỗi format: Ten-SL-Gia|Ten-SL-Gia
 
-        // Hiển thị dữ liệu lên giao diện Web
+        // Hiển thị thông tin chung
         document.getElementById('display-id').innerText = id;
+        document.getElementById('display-date').innerText = new Date().toLocaleString('vi-VN');
         document.getElementById('display-total').innerText = Number(total).toLocaleString() + 'đ';
 
-        // Xử lý khi bấm nút Xác nhận
-        const btn = document.getElementById('btnConfirm');
-        btn.addEventListener('click', () => {
-            btn.disabled = true;
-            btn.innerText = "Đang xử lý...";
-
-            // Gửi lệnh cập nhật trạng thái lên Firebase
-            // Nó sẽ ghi đè vào đường dẫn: orders/MÃ_HD/status = "paid"
-            update(ref(db, 'orders/' + id), {
-                status: "paid",
-                confirmAt: new Date().getTime()
-            })
-            .then(() => {
-                // Hiện thông báo thành công trên web điện thoại
-                document.getElementById('order-details').style.display = 'none';
-                document.getElementById('status-tag').style.display = 'none';
-                btn.style.display = 'none';
-                document.getElementById('success-msg').style.display = 'block';
-            })
-            .catch((error) => {
-                alert("Lỗi kết nối Firebase: " + error.message);
-                btn.disabled = false;
-                btn.innerText = "XÁC NHẬN THANH TOÁN";
+        // Xử lý hiển thị danh sách sản phẩm
+        const tbody = document.getElementById('product-list');
+        if (itemsRaw) {
+            const items = itemsRaw.split('|');
+            items.forEach(item => {
+                const [name, qty, price] = item.split('-');
+                const row = `<tr>
+                    <td>${name}<br><span class="qty">x${qty}</span></td>
+                    <td style="text-align: right;">${Number(price).toLocaleString()}đ</td>
+                </tr>`;
+                tbody.innerHTML += row;
             });
-        });
+        }
+
+        // Nút xác nhận
+        const btn = document.getElementById('btnConfirm');
+        btn.onclick = () => {
+            btn.disabled = true;
+            btn.innerText = "Đang gửi tín hiệu...";
+            
+            update(ref(db, 'orders/' + id), { 
+                status: "paid",
+                paidTime: new Date().toISOString()
+            }).then(() => {
+                document.getElementById('invoice-content').style.display = 'none';
+                document.getElementById('success-msg').style.display = 'block';
+            });
+        };
     </script>
 </body>
 </html>
