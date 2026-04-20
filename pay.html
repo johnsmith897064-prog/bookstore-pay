@@ -13,17 +13,17 @@
         .order-info p { margin: 8px 0; color: #555; }
         .total-price { font-size: 26px; color: #d9534f; font-weight: bold; margin-top: 10px; display: block; }
         .btn-confirm { background: #0068ff; color: white; border: none; padding: 18px 20px; width: 100%; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn-confirm:active { transform: scale(0.98); background: #0056d2; }
+        .btn-confirm:disabled { background: #ccc; cursor: not-allowed; }
         #success-msg { display: none; margin-top: 20px; }
         .check-icon { font-size: 50px; color: #28a745; }
     </style>
 </head>
 <body>
-    <div class="card" id="card-content">
+    <div class="card">
         <div class="header">BOOK STORE</div>
-        <div class="status-badge">Chờ xác nhận thanh toán</div>
+        <div id="status-tag" class="status-badge">Chờ xác nhận thanh toán</div>
         
-        <div class="order-info">
+        <div id="order-details" class="order-info">
             <p>Mã hóa đơn: <strong id="display-id">---</strong></p>
             <p>Nội dung: <strong>Thanh toán mua sách</strong></p>
             <hr style="border: 0.5px solid #eee;">
@@ -31,7 +31,7 @@
             <span class="total-price" id="display-total">0đ</span>
         </div>
 
-        <button class="btn-confirm" onclick="handleConfirm()">XÁC NHẬN THANH TOÁN</button>
+        <button id="btnConfirm" class="btn-confirm">XÁC NHẬN THANH TOÁN</button>
 
         <div id="success-msg">
             <div class="check-icon">✔</div>
@@ -40,25 +40,54 @@
         </div>
     </div>
 
-    <script>
-        // --- KHÚC QUAN TRỌNG ĐỂ ĐỌC DỮ LIỆU TỪ QR ---
+    <script type="module">
+        // Import các hàm cần thiết từ Firebase SDK
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
+        import { getDatabase, ref, update } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js";
+
+        // Cấu hình Database của ông
+        const firebaseConfig = {
+            databaseURL: "https://nhanqrcode-default-rtdb.asia-southeast1.firebasedatabase.app/"
+        };
+
+        // Khởi tạo Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Lấy thông tin từ mã QR (URL)
         const urlParams = new URLSearchParams(window.location.search);
-        const id = urlParams.get('id') || 'HD-TEMP';
+        const id = urlParams.get('id') || 'TEMP_ID';
         const total = urlParams.get('total') || '0';
 
-        // Hiển thị lên màn hình
+        // Hiển thị dữ liệu lên giao diện Web
         document.getElementById('display-id').innerText = id;
         document.getElementById('display-total').innerText = Number(total).toLocaleString() + 'đ';
 
-        function handleConfirm() {
-            // Ẩn nút và info, hiện thông báo thành công
-            document.querySelector('.order-info').style.display = 'none';
-            document.querySelector('.btn-confirm').style.display = 'none';
-            document.querySelector('.status-badge').style.display = 'none';
-            document.getElementById('success-msg').style.display = 'block';
-            
-            // Nếu có Firebase thì code gửi tín hiệu sẽ nằm ở đây
-        }
+        // Xử lý khi bấm nút Xác nhận
+        const btn = document.getElementById('btnConfirm');
+        btn.addEventListener('click', () => {
+            btn.disabled = true;
+            btn.innerText = "Đang xử lý...";
+
+            // Gửi lệnh cập nhật trạng thái lên Firebase
+            // Nó sẽ ghi đè vào đường dẫn: orders/MÃ_HD/status = "paid"
+            update(ref(db, 'orders/' + id), {
+                status: "paid",
+                confirmAt: new Date().getTime()
+            })
+            .then(() => {
+                // Hiện thông báo thành công trên web điện thoại
+                document.getElementById('order-details').style.display = 'none';
+                document.getElementById('status-tag').style.display = 'none';
+                btn.style.display = 'none';
+                document.getElementById('success-msg').style.display = 'block';
+            })
+            .catch((error) => {
+                alert("Lỗi kết nối Firebase: " + error.message);
+                btn.disabled = false;
+                btn.innerText = "XÁC NHẬN THANH TOÁN";
+            });
+        });
     </script>
 </body>
 </html>
